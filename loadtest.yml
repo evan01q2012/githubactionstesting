@@ -1,0 +1,30 @@
+name: Distributed 20-IP Load Test
+on: workflow_dispatch
+
+jobs:
+  k6_test:
+    strategy:
+      matrix:
+        runner: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C047C0FA1A
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Execute Load
+        run: |
+          cat << 'EOF' > test.js
+          import http from 'k6/http';
+          export const options = {
+            vus: 50,
+            duration: '1m',
+          };
+          export default function () {
+            http.get('https://scriptsfor.me');
+          }
+          EOF
+          k6 run test.js
